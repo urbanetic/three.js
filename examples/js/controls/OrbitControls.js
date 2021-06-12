@@ -79,6 +79,10 @@ THREE.OrbitControls = function ( object, domElement ) {
 	this.position0 = this.object.position.clone();
 	this.zoom0 = this.object.zoom;
 
+	// for skybox
+	this.maxCameraDistance = 50000;
+	this.cameraOrigin = new THREE.Vector3(0,0,0);
+
 	//
 	// public methods
 	//
@@ -199,14 +203,15 @@ THREE.OrbitControls = function ( object, domElement ) {
 			spherical.radius = Math.max( scope.minDistance, Math.min( scope.maxDistance, spherical.radius ) );
 
 			// move target to panned location
-
+			var nextTarget = scope.target.clone();
+			panOffset.y = 0;
 			if ( scope.enableDamping === true ) {
 
-				scope.target.addScaledVector( panOffset, scope.dampingFactor );
+				nextTarget.addScaledVector( panOffset, scope.dampingFactor );
 
 			} else {
 
-				scope.target.add( panOffset );
+				nextTarget.add( panOffset );
 
 			}
 
@@ -215,7 +220,12 @@ THREE.OrbitControls = function ( object, domElement ) {
 			// rotate offset back to "camera-up-vector-is-up" space
 			offset.applyQuaternion( quatInverse );
 
-			position.copy( scope.target ).add( offset );
+			var nextPos = nextTarget.clone().add(offset);
+			// Check new camera position is still in skybox
+			if(inBounds(nextPos, scope.cameraOrigin, scope.maxCameraDistance)){
+				position.copy( nextTarget ).add( offset );
+			}
+			scope.target.copy( nextTarget );
 
 			scope.object.lookAt( scope.target );
 
@@ -259,6 +269,15 @@ THREE.OrbitControls = function ( object, domElement ) {
 		};
 
 	}();
+
+	this.setCameraLimit = function (center, limit) {
+		this.maxCameraDistance = limit;
+		this.cameraOrigin = center;
+	}
+
+	function inBounds (position, cameraOrigin, maxCameraDistance) {
+		return (position.y > 0 && position.distanceTo(cameraOrigin) < maxCameraDistance);
+	}
 
 	this.dispose = function () {
 
