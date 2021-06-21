@@ -109,6 +109,12 @@ var OrbitControls = function ( object, domElement ) {
 
 	};
 
+	this.clearState = function () {
+
+		state = STATE.NONE;
+
+	}
+
 	this.saveState = function () {
 
 		scope.target0.copy( scope.target );
@@ -121,10 +127,10 @@ var OrbitControls = function ( object, domElement ) {
 
 		scope.target.copy( scope.target0 );
 		scope.object.position.copy( scope.position0 );
-		scope.object.zoom = scope.zoom0;
+		// scope.object.zoom = scope.zoom0;
 
-		scope.object.updateProjectionMatrix();
-		scope.dispatchEvent( changeEvent );
+		// scope.object.updateProjectionMatrix();
+		// scope.dispatchEvent( changeEvent );
 
 		scope.update();
 
@@ -158,7 +164,7 @@ var OrbitControls = function ( object, domElement ) {
 			// angle from z-axis around y-axis
 			spherical.setFromVector3( offset );
 
-			if ( scope.autoRotate && state === STATE.NONE ) {
+			if ( scope.autoRotate ) { // && state === STATE.NONE ) {
 
 				rotateLeft( getAutoRotationAngle() );
 
@@ -551,7 +557,7 @@ var OrbitControls = function ( object, domElement ) {
 
 			dollyOut( getZoomScale() );
 
-		} else if ( dollyDelta.y < 0 ) {
+		} else { // if ( dollyDelta.y < 0 ) {
 
 			dollyIn( getZoomScale() );
 
@@ -592,6 +598,10 @@ var OrbitControls = function ( object, domElement ) {
 		} else if ( event.deltaY > 0 ) {
 
 			dollyOut( getZoomScale() );
+
+		} else {
+
+			dollyIn( getZoomScale() );
 
 		}
 
@@ -845,7 +855,7 @@ var OrbitControls = function ( object, domElement ) {
 	function onMouseDown( event ) {
 
 		// Prevent the browser from scrolling.
-		event.preventDefault();
+		// event.preventDefault();
 
 		// Manually set the focus since calling preventDefault above
 		// prevents the browser from setting it automatically.
@@ -939,14 +949,14 @@ var OrbitControls = function ( object, domElement ) {
 
 		}
 
-		if ( state !== STATE.NONE ) {
+		// if ( state !== STATE.NONE ) {
 
 			scope.domElement.ownerDocument.addEventListener( 'pointermove', onPointerMove, false );
 			scope.domElement.ownerDocument.addEventListener( 'pointerup', onPointerUp, false );
 
 			scope.dispatchEvent( startEvent );
 
-		}
+		// }
 
 	}
 
@@ -954,7 +964,7 @@ var OrbitControls = function ( object, domElement ) {
 
 		if ( scope.enabled === false ) return;
 
-		event.preventDefault();
+		// event.preventDefault();
 
 		switch ( state ) {
 
@@ -1001,17 +1011,17 @@ var OrbitControls = function ( object, domElement ) {
 
 	}
 
-	function onPointerOut( event ) {
+	function onMouseOut( event ) {
 		// mouse has left domelement.
 		onMouseUp( event );
 	}
 
 	function onMouseWheel( event ) {
 
-		if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
+		if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.ROTATE ) ) return;
 
 		event.preventDefault();
-		event.stopPropagation();
+		// event.stopPropagation();
 
 		scope.dispatchEvent( startEvent );
 
@@ -1107,11 +1117,11 @@ var OrbitControls = function ( object, domElement ) {
 
 		}
 
-		if ( state !== STATE.NONE ) {
+		// if ( state !== STATE.NONE ) {
 
 			scope.dispatchEvent( startEvent );
 
-		}
+		// }
 
 	}
 
@@ -1196,7 +1206,7 @@ var OrbitControls = function ( object, domElement ) {
 
 	scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
 
-	scope.domElement.addEventListener( 'pointerout', onPointerOut, false);
+	scope.domElement.addEventListener( 'pointerout', onMouseOut, false);
 	scope.domElement.addEventListener( 'pointerdown', onPointerDown, false );
 	scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
 
