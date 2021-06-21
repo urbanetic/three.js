@@ -289,6 +289,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		scope.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
 
+		scope.domElement.addEventListener( 'pointerout', onMouseOut, false );
 		scope.domElement.removeEventListener( 'pointerdown', onPointerDown, false );
 		scope.domElement.removeEventListener( 'wheel', onMouseWheel, false );
 
@@ -1008,7 +1009,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onMouseWheel( event ) {
 
-		if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.ROTATE ) ) return;
+		if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
 
 		event.preventDefault();
 		// event.stopPropagation();
