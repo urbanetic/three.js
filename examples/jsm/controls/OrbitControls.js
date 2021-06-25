@@ -94,6 +94,10 @@ class OrbitControls extends EventDispatcher {
 		this.position0 = this.object.position.clone();
 		this.zoom0 = this.object.zoom;
 
+		// for skybox
+		this.maxCameraDistance = 50000;
+		this.cameraOrigin = new THREE.Vector3(0,0,0);
+
 		// the target DOM element for key events
 		this._domElementKeyEvents = null;
 
@@ -120,6 +124,12 @@ class OrbitControls extends EventDispatcher {
 
 		};
 
+		this.clearState = function () {
+
+			state = STATE.NONE;
+	
+		};
+
 		this.saveState = function () {
 
 			scope.target0.copy( scope.target );
@@ -132,10 +142,10 @@ class OrbitControls extends EventDispatcher {
 
 			scope.target.copy( scope.target0 );
 			scope.object.position.copy( scope.position0 );
-			scope.object.zoom = scope.zoom0;
+			// scope.object.zoom = scope.zoom0;
 
-			scope.object.updateProjectionMatrix();
-			scope.dispatchEvent( _changeEvent );
+			// scope.object.updateProjectionMatrix();
+			// scope.dispatchEvent( _changeEvent );
 
 			scope.update();
 
@@ -169,7 +179,7 @@ class OrbitControls extends EventDispatcher {
 				// angle from z-axis around y-axis
 				spherical.setFromVector3( offset );
 
-				if ( scope.autoRotate && state === STATE.NONE ) {
+				if ( scope.autoRotate ) { //&& state === STATE.NONE ) {
 
 					rotateLeft( getAutoRotationAngle() );
 
@@ -224,14 +234,15 @@ class OrbitControls extends EventDispatcher {
 				spherical.radius = Math.max( scope.minDistance, Math.min( scope.maxDistance, spherical.radius ) );
 
 				// move target to panned location
-
+				var nextTarget = scope.target.clone();
+				panOffset.y = 0;
 				if ( scope.enableDamping === true ) {
 
-					scope.target.addScaledVector( panOffset, scope.dampingFactor );
+					nextTarget.addScaledVector( panOffset, scope.dampingFactor );
 
 				} else {
 
-					scope.target.add( panOffset );
+					nextTarget.add( panOffset );
 
 				}
 
@@ -240,7 +251,12 @@ class OrbitControls extends EventDispatcher {
 				// rotate offset back to "camera-up-vector-is-up" space
 				offset.applyQuaternion( quatInverse );
 
-				position.copy( scope.target ).add( offset );
+				var nextPos = nextTarget.clone().add(offset);
+				// Check new camera position is still in skybox
+				if(inBounds(nextPos, scope.cameraOrigin, scope.maxCameraDistance)){
+					position.copy( nextTarget ).add( offset );
+				}
+				scope.target.copy( nextTarget );
 
 				scope.object.lookAt( scope.target );
 
@@ -285,10 +301,20 @@ class OrbitControls extends EventDispatcher {
 
 		}();
 
+		this.setCameraLimit = function (center, limit) {
+			this.maxCameraDistance = limit;
+			this.cameraOrigin = center;
+		}
+	
+		function inBounds (position, cameraOrigin, maxCameraDistance) {
+			return (position.y > 0 && position.distanceTo(cameraOrigin) < maxCameraDistance);
+		}
+
 		this.dispose = function () {
 
 			scope.domElement.removeEventListener( 'contextmenu', onContextMenu );
 
+			scope.domElement.addEventListener( 'pointerout', onMouseOut, false );
 			scope.domElement.removeEventListener( 'pointerdown', onPointerDown );
 			scope.domElement.removeEventListener( 'wheel', onMouseWheel );
 
@@ -548,7 +574,7 @@ class OrbitControls extends EventDispatcher {
 
 				dollyOut( getZoomScale() );
 
-			} else if ( dollyDelta.y < 0 ) {
+			} else { // if ( dollyDelta.y < 0 )
 
 				dollyIn( getZoomScale() );
 
@@ -590,6 +616,10 @@ class OrbitControls extends EventDispatcher {
 
 				dollyOut( getZoomScale() );
 
+			} else {
+
+				dollyIn( getZoomScale() );
+	
 			}
 
 			scope.update();
@@ -842,7 +872,7 @@ class OrbitControls extends EventDispatcher {
 		function onMouseDown( event ) {
 
 			// Prevent the browser from scrolling.
-			event.preventDefault();
+			// event.preventDefault();
 
 			// Manually set the focus since calling preventDefault above
 			// prevents the browser from setting it automatically.
@@ -936,14 +966,14 @@ class OrbitControls extends EventDispatcher {
 
 			}
 
-			if ( state !== STATE.NONE ) {
+			// if ( state !== STATE.NONE ) {
 
 				scope.domElement.ownerDocument.addEventListener( 'pointermove', onPointerMove );
 				scope.domElement.ownerDocument.addEventListener( 'pointerup', onPointerUp );
 
 				scope.dispatchEvent( _startEvent );
 
-			}
+			// }
 
 		}
 
@@ -951,7 +981,7 @@ class OrbitControls extends EventDispatcher {
 
 			if ( scope.enabled === false ) return;
 
-			event.preventDefault();
+			// event.preventDefault();
 
 			switch ( state ) {
 
@@ -983,6 +1013,11 @@ class OrbitControls extends EventDispatcher {
 
 		}
 
+		function onMouseOut( event ) {
+			// mouse has left domelement.
+			onMouseUp( event );
+		}
+
 		function onMouseUp( event ) {
 
 			scope.domElement.ownerDocument.removeEventListener( 'pointermove', onPointerMove );
@@ -1002,7 +1037,7 @@ class OrbitControls extends EventDispatcher {
 
 			if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
 
-			event.preventDefault();
+			// event.preventDefault();
 
 			scope.dispatchEvent( _startEvent );
 
@@ -1098,11 +1133,11 @@ class OrbitControls extends EventDispatcher {
 
 			}
 
-			if ( state !== STATE.NONE ) {
+			// if ( state !== STATE.NONE ) {
 
 				scope.dispatchEvent( _startEvent );
 
-			}
+			// }
 
 		}
 
@@ -1185,7 +1220,7 @@ class OrbitControls extends EventDispatcher {
 		//
 
 		scope.domElement.addEventListener( 'contextmenu', onContextMenu );
-
+		scope.domElement.addEventListener( 'pointerout', onMouseOut, false);
 		scope.domElement.addEventListener( 'pointerdown', onPointerDown );
 		scope.domElement.addEventListener( 'wheel', onMouseWheel, { passive: false } );
 
