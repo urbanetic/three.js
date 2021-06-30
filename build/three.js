@@ -16625,7 +16625,7 @@
 				return session;
 			};
 
-			this.setSession = async function (value) {
+			this.setSession = function (value) {
 				session = value;
 
 				if (session !== null) {
@@ -16640,7 +16640,7 @@
 					const attributes = gl.getContextAttributes();
 
 					if (attributes.xrCompatible !== true) {
-						await gl.makeXRCompatible();
+						gl.makeXRCompatible();
 					}
 
 					const layerInit = {
@@ -16655,7 +16655,9 @@
 					session.updateRenderState({
 						baseLayer: baseLayer
 					});
-					referenceSpace = await session.requestReferenceSpace(referenceSpaceType);
+					session.requestReferenceSpace(referenceSpaceType).then(function(value){
+						referenceSpace = value;
+					});
 					animation.setContext(session);
 					animation.start();
 					scope.isPresenting = true;
